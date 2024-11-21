@@ -10,12 +10,9 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
-    <nav class="navbar navbar-light">
-        <a class="navbar-brand" href="#">Logo</a>
-        <a class="btn btn-secondary" href="Homepage.php">Home</a>
-        <a class="btn btn-secondary" href="Update.php">Update</a>
-        <a class="btn btn-primary" href="Login.php">Logout</a>
-    </nav>
+<?php
+    include "inc/nav.inc.php"; 
+    ?>
     <div class="container mt-5">
         <form method="post">
             <label for="module">Tristan Modules:</label>
