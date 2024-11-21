@@ -11,11 +11,12 @@
 
         <div class="collapse navbar-collapse" id="navbar-links">
             <div class="navbar-nav ms-auto">
-                <a href="homepage.php" class="nav-link active">Home</a>
-                <a href="index.php" class="nav-link">Grades</a>
-                <a href="update.php" class="nav-link">Update</a>
-                <a href="profile.php" class="nav-link">Profile</a>
-                <a href="logout.php" class="btn btn-primary">Logout</a>
+                <a href="Homepage.php" class="nav-link active">Home</a>
+                <a href="Index.php" class="nav-link">Grades</a>
+                <a href="Update.php" class="nav-link">Update</a>
+                <a href="Profile.php" class="nav-link">Profile</a>
+                <a href="Register.php" class="nav-link">Register</a>
+                <a href="Login.php" class="btn btn-primary">Logout</a>
             </div>
         </div>
     </div>
