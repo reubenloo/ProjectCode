@@ -13,26 +13,71 @@ if (!$student_id) {
     exit;
 }
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+// Handle form submission for enrolling in a module
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['enroll_module'])) {
+    $module_id = $_POST['enroll_module'];
+
+    // Check if the student is already enrolled in the selected module
+    $sql_check = "SELECT student_module_id FROM student_modules WHERE student_id = ? AND module_id = ?";
+    $stmt_check = $conn->prepare($sql_check);
+    $stmt_check->bind_param("ii", $student_id, $module_id);
+    $stmt_check->execute();
+    $result_check = $stmt_check->get_result();
+
+    if ($result_check->num_rows === 0) {
+        // If not enrolled, insert into student_modules to enroll the student
+        $sql_insert = "INSERT INTO student_modules (student_id, module_id) VALUES (?, ?)";
+        $stmt_insert = $conn->prepare($sql_insert);
+        $stmt_insert->bind_param("ii", $student_id, $module_id);
+        if ($stmt_insert->execute()) {
+            echo "<div class='alert alert-success'>Successfully enrolled in module.</div>";
+        } else {
+            echo "<div class='alert alert-danger'>Error enrolling in module: " . $stmt_insert->error . "</div>";
+        }
+        $stmt_insert->close();
+    } else {
+        echo "<div class='alert alert-warning'>You are already enrolled in this module.</div>";
+    }
+
+    $stmt_check->close();
+}
+
+// Handle form submission for updating the grade
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['grade'], $_POST['module'], $_POST['component'])) {
     // Get user input from form
     $student_module_id = $_POST['module'];
     $component_id = $_POST['component'];
     $grade = $_POST['grade'];
 
-    // Update the grade in the student_grades table
-    $sql = "UPDATE student_grades SET grade = ? WHERE student_module_id = ? AND component_id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("sii", $grade, $student_module_id, $component_id);
-    
-    if ($stmt->execute()) {
+    // Check if the grade already exists for the given student_module_id and component_id
+    $sql_check = "SELECT * FROM student_grades WHERE student_module_id = ? AND component_id = ?";
+    $stmt_check = $conn->prepare($sql_check);
+    $stmt_check->bind_param("ii", $student_module_id, $component_id);
+    $stmt_check->execute();
+    $result_check = $stmt_check->get_result();
+
+    if ($result_check->num_rows > 0) {
+        // Record exists, perform an update
+        $sql_update = "UPDATE student_grades SET grade = ? WHERE student_module_id = ? AND component_id = ?";
+        $stmt_update = $conn->prepare($sql_update);
+        $stmt_update->bind_param("sii", $grade, $student_module_id, $component_id);
+    } else {
+        // Record does not exist, perform an insert
+        $sql_insert = "INSERT INTO student_grades (student_module_id, component_id, grade) VALUES (?, ?, ?)";
+        $stmt_update = $conn->prepare($sql_insert);
+        $stmt_update->bind_param("iis", $student_module_id, $component_id, $grade);
+    }
+
+    if ($stmt_update->execute()) {
         // Redirect back to Index.php after update
         header('Location: Index.php');
         exit();
     } else {
-        echo "Error updating grade: " . $stmt->error;
+        echo "Error updating grade: " . $stmt_update->error;
     }
 
-    $stmt->close();
+    $stmt_check->close();
+    $stmt_update->close();
 }
 ?>
 <!DOCTYPE html>
@@ -47,12 +92,39 @@ include "inc/head.inc.php";
     include "inc/nav.inc.php";
     ?>
     <div class="container mt-5">
+
+        <!-- Enroll in Module Section -->
+        <form method="post" action="">
+            <div class="form-group">
+                <label for="enroll_module">Enroll in a Module:</label>
+                <select id="enroll_module" name="enroll_module" class="form-control mb-3" required>
+                    <option value="" disabled selected>Select a module</option>
+                    <?php
+                    // Fetch all modules from the database
+                    $sql = "SELECT module_id, module_name FROM modules";
+                    $stmt = $conn->prepare($sql);
+                    $stmt->execute();
+                    $result = $stmt->get_result();
+
+                    while ($row = $result->fetch_assoc()) {
+                        echo "<option value='{$row['module_id']}'>{$row['module_name']}</option>";
+                    }
+
+                    $stmt->close();
+                    ?>
+                </select>
+                <button type="submit" class="btn btn-primary">Enroll</button>
+            </div>
+        </form>
+
+        <!-- Update Grade Section -->
         <form method="post" action="">
             <div class="form-group">
                 <label for="module">Module to Update:</label>
                 <select id="module" name="module" class="form-control" required>
+                    <option value="" disabled selected>Select a module</option>
                     <?php
-                    // Fetch modules for the logged-in student
+                    // Fetch modules that the student is enrolled in
                     $sql = "SELECT sm.student_module_id, m.module_name 
                             FROM student_modules sm
                             JOIN modules m ON sm.module_id = m.module_id
@@ -73,32 +145,72 @@ include "inc/head.inc.php";
             <div class="form-group">
                 <label for="component">Component to Update:</label>
                 <select id="component" name="component" class="form-control" required>
-                    <?php
-                    // Fetch all components to allow updates
-                    $sql = "SELECT component_id, component_name FROM components";
-                    $result = $conn->query($sql);
-
-                    while ($row = $result->fetch_assoc()) {
-                        echo "<option value='{$row['component_id']}'>{$row['component_name']}</option>";
-                    }
-                    ?>
+                    <option value="" disabled selected>Select a component</option>
+                    <!-- Options will be populated via JavaScript -->
                 </select>
             </div>
             <div class="form-group">
                 <label for="grade">Grade:</label>
                 <select id="grade" name="grade" class="form-control" required>
+                    <option value="" disabled selected>Select a grade</option>
                     <option value="A+">A+</option>
                     <option value="A">A</option>
                     <option value="A-">A-</option>
-                    <!-- Add other grades -->
+                    <option value="B+">B+</option>
+                    <option value="B">B</option>
+                    <option value="B-">B-</option>
+                    <option value="C+">C+</option>
+                    <option value="C">C</option>
+                    <option value="C-">C-</option>
+                    <option value="D+">D+</option>
+                    <option value="D">D</option>
+                    <option value="D-">D-</option>
+                    <option value="F">F</option>
                 </select>
             </div>
-            <button type="submit" class="btn btn-primary">Update</button>
+            <button type="submit" class="btn btn-primary">Update Grade</button>
         </form>
     </div>
     <?php
     include "inc/footer.inc.php";
     ?>
+    <script>
+    document.getElementById('module').addEventListener('change', function() {
+        var student_module_id = this.value;
+
+        // Clear the component select
+        var componentSelect = document.getElementById('component');
+        componentSelect.innerHTML = '<option value="" disabled selected>Select a component</option>';
+
+        if (student_module_id) {
+            // Make an AJAX request to fetch components
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', 'get_components.php?student_module_id=' + student_module_id, true);
+            xhr.onload = function() {
+                if (this.status == 200) {
+                    try {
+                        var components = JSON.parse(this.responseText);
+                        if (components.error) {
+                            alert(components.error);
+                        } else {
+                            components.forEach(function(component) {
+                                var option = document.createElement('option');
+                                option.value = component.component_id;
+                                option.text = component.component_name;
+                                componentSelect.add(option);
+                            });
+                        }
+                    } catch (e) {
+                        console.error('Error parsing response:', e);
+                    }
+                } else {
+                    console.error('Error fetching components:', this.statusText);
+                }
+            };
+            xhr.send();
+        }
+    });
+    </script>
 </body>
 
 </html>
