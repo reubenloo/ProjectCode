@@ -97,6 +97,63 @@ include "inc/head.inc.php";
     </div>
 
     <?php
+    function get_data()
+    {
+        global $email, $pwd, $errorMsg, $success;
+
+        // Create database connection.
+        $config = parse_ini_file('/var/www/private/db-config.ini');
+        if (!$config) {
+            $errorMsg = "Failed to read database config file.";
+            $success = false;
+        } else {
+            $conn = new mysqli(
+                $config['servername'],
+                $config['username'],
+                $config['password'],
+                $config['dbname']
+            );
+            // Check connection
+            if ($conn->connect_error) {
+                $errorMsg = "Connection failed: " . $conn->connect_error;
+                $success = false;
+            } else {
+                // Prepare the statement:
+                $stmt = $conn->prepare("SELECT * FROM XXX WHERE XXX INNER JOIN XXX = ?");
+
+                if (!$stmt) {
+                    echo "Prepare failed: " . $conn->error . "<br>";
+                    $success = false;
+                    return;
+                }
+
+                $stmt->bind_param("s", $email);
+
+                if (!$stmt->execute()) {
+                    echo "Execute failed: (" . $stmt->errno . ") " . $stmt->error . "<br>";
+                    $errorMsg = "Execute failed: (" . $stmt->errno . ") " . $stmt->error;
+                    $success = false;
+                }
+
+                $result = $stmt->get_result();
+
+                if ($row = $result->fetch_assoc()) {
+                    // 4. If email exists, verify password using password_verify():
+                    if (password_verify($pwd, $row['password'])) {
+                        $_SESSION['user_fname'] = $row['fname'];
+                        $_SESSION['user_lname'] = $row['lname'];
+                        return true;
+                    }
+                }
+                return false;
+                $stmt->close();
+            }
+            $conn->close();
+        }
+    }
+    ?>
+
+    <?php
     include "inc/footer.inc.php";
     ?>
 </body>

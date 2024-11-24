@@ -58,7 +58,11 @@ include "inc/head.inc.php";
 <?php
     include "inc/nav.inc.php"; 
     ?>
-
+    <h1>Student Login</h1>
+    <p>
+        Existing students log in here. For new students, plesae go to the
+        <a href="register.php">Student Registration page.</a>.
+    </p>
     <div class="container mt-5">
         <?php if ($login_error != ""): ?>
             <div class="alert alert-danger" role="alert">
@@ -68,11 +72,11 @@ include "inc/head.inc.php";
         <form method="post" action="">
             <div class="form-group">
                 <label for="studentId">Student ID:</label>
-                <input type="text" class="form-control" id="studentId" name="studentId" required>
+                <input type="text" class="form-control" id="student_id" name="student_id" placeholder="Enter student ID" required>
             </div>
             <div class="form-group">
                 <label for="password">Password:</label>
-                <input type="password" class="form-control" id="password" name="password" required>
+                <input type="password" class="form-control" id="password" name="password" placeholder="Enter password" required>
             </div>
             <button type="submit" class="btn btn-primary">Login</button>
             <div class="mt-3">

@@ -64,15 +64,15 @@ include "inc/head.inc.php";
     include "inc/nav.inc.php";
     ?>
     <div class="container mt-5">
-        <?php if ($register_error != ""): ?>
-            <div class="alert alert-danger" role="alert">
-                <?php echo $register_error; ?>
-            </div>
-        <?php endif; ?>
-        <form method="post" action="">
+        <form method="post" action="process_register.php">
+            #question, shouldn't the student ID be assigned by system than chosen by student?
             <div class="form-group">
                 <label for="studentId">Student ID:</label>
-                <input type="text" class="form-control" id="studentId" name="studentId" required>
+                <input type="text" class="form-control" id="student_id" name="student_id" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" class="form-control" id="email" name="email" required>
             </div>
             <div class="form-group">
                 <label for="password">Password:</label>
@@ -80,11 +80,7 @@ include "inc/head.inc.php";
             </div>
             <div class="form-group">
                 <label for="confirmPassword">Confirm Password:</label>
-                <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
-            </div>
-            <div class="form-group">
-                <label for="email">Email:</label>
-                <input type="email" class="form-control" id="email" name="email" required>
+                <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
             </div>
             <button type="submit" class="btn btn-primary">Register</button>
         </form>
