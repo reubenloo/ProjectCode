@@ -109,7 +109,7 @@ include "inc/head.inc.php";
                 exit;
             }
 
-            // Initialize grade mapping without E grades
+            // Initialize grade mapping
             $grade_to_percentage = array(
                 'A+' => 85,
                 'A'  => 80,
@@ -131,7 +131,6 @@ include "inc/head.inc.php";
 
             // Initialize variables
             $total_components = 0;
-            $graded_components = 0;
             $grade_sum = 0;
 
             $components = array();
@@ -142,11 +141,14 @@ include "inc/head.inc.php";
 
                 $total_components++;
 
-                if ($grade_letter !== null && isset($grade_to_percentage[$grade_letter])) {
+                // Treat NULL grades or grades not in mapping as 'F' (0%)
+                if ($grade_letter === null || !isset($grade_to_percentage[$grade_letter])) {
+                    $grade_percentage = 0; // 'F' or 'N/A' equivalent to 0%
+                } else {
                     $grade_percentage = $grade_to_percentage[$grade_letter];
-                    $grade_sum += $grade_percentage;
-                    $graded_components++;
                 }
+
+                $grade_sum += $grade_percentage;
 
                 $components[] = array(
                     'component_name' => $component_name,
@@ -173,8 +175,8 @@ include "inc/head.inc.php";
             }
 
             // Calculate current grade percentage
-            if ($graded_components > 0) {
-                $current_grade_percentage = $grade_sum / $graded_components;
+            if ($total_components > 0) {
+                $current_grade_percentage = $grade_sum / $total_components;
             } else {
                 $current_grade_percentage = 0;
             }
@@ -183,7 +185,7 @@ include "inc/head.inc.php";
             $current_grade_letter = get_grade_letter($current_grade_percentage, $percentage_to_grade);
 
             // Display current grade
-            echo "<h3>Current Grade: $current_grade_letter (" . round($current_grade_percentage, 2) . "%)</h3>";
+            echo "<h3>Current Average Grade: $current_grade_letter (" . round($current_grade_percentage, 2) . "%)</h3>";
 
             // If goal is selected, calculate required difference
             if ($selected_goal != '' && isset($grade_to_percentage[$selected_goal])) {
@@ -209,64 +211,8 @@ include "inc/head.inc.php";
             return 'F';
         }
         ?>
+
     </div>
-
-    <?php
-    function get_data()
-    {
-        global $email, $pwd, $errorMsg, $success;
-
-        // Create database connection.
-        $config = parse_ini_file('/var/www/private/db-config.ini');
-        if (!$config) {
-            $errorMsg = "Failed to read database config file.";
-            $success = false;
-        } else {
-            $conn = new mysqli(
-                $config['servername'],
-                $config['username'],
-                $config['password'],
-                $config['dbname']
-            );
-            // Check connection
-            if ($conn->connect_error) {
-                $errorMsg = "Connection failed: " . $conn->connect_error;
-                $success = false;
-            } else {
-                // Prepare the statement:
-                $stmt = $conn->prepare("SELECT * FROM XXX WHERE XXX INNER JOIN XXX = ?");
-
-                if (!$stmt) {
-                    echo "Prepare failed: " . $conn->error . "<br>";
-                    $success = false;
-                    return;
-                }
-
-                $stmt->bind_param("s", $email);
-
-                if (!$stmt->execute()) {
-                    echo "Execute failed: (" . $stmt->errno . ") " . $stmt->error . "<br>";
-                    $errorMsg = "Execute failed: (" . $stmt->errno . ") " . $stmt->error;
-                    $success = false;
-                }
-
-                $result = $stmt->get_result();
-
-                if ($row = $result->fetch_assoc()) {
-                    // 4. If email exists, verify password using password_verify():
-                    if (password_verify($pwd, $row['password'])) {
-                        $_SESSION['user_fname'] = $row['fname'];
-                        $_SESSION['user_lname'] = $row['lname'];
-                        return true;
-                    }
-                }
-                return false;
-                $stmt->close();
-            }
-            $conn->close();
-        }
-    }
-    ?>
 
     <?php
     include "inc/footer.inc.php";
