@@ -10,6 +10,7 @@ include "inc/head.inc.php";
     <?php include "inc/nav.inc.php"; ?>
 
     <?php
+    require_once 'validation_functions.php';
     $student_id = $password = $errorMsg = "";
     $success = true;
 

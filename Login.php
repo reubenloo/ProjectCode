@@ -2,8 +2,7 @@
 // Login.php
 session_start(); // Start session to manage login status
 
-// Include the database connection file
-include 'db_connect.php'; // Connection to the database
+require_once 'validation_functions.php';
 
 // Handle form submission
 $login_error = "";
