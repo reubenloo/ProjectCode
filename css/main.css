@@ -1,14 +1,108 @@
+/* General Styles */
+body {
+    font-family: 'Open Sans', sans-serif; /* Default font for the body text */
+    margin: 0;
+    padding: 0;
+    background-color: #f8f9fa; /* Light background for contrast */
+}
+
 h1 {
     font-family: 'Lucida Handwriting', 'Lucida Sans', cursive;
+    text-align: center;
+    margin-bottom: 30px;
+    color: #343a40; /* Dark gray for better readability */
+}
+
+/* Navbar Styles */
+.navbar {
+    background-color: #6c757d; /* Matches bg-secondary (Bootstrap's dark gray) */
+    padding: 10px 20px;
 }
 
 .navbar-logo {
     height: 50px;
-    /* Adjust this value to your preferred size */
     width: auto;
 }
 
-a {
+.navbar-brand-text {
+    font-size: 18px;
+    font-weight: bold;
     color: white;
-    text-decoration: none;
+    margin-left: 10px;
+}
+
+/* Subheadings */
+.subheading {
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 30px;
+    color: #333;
+}
+
+/* Description Text (using Open Sans) */
+.description {
+    font-family: 'Open Sans', sans-serif; /* Ensures Open Sans is used for descriptions */
+    font-size: 18px;
+    text-align: center;
+    margin: 20px auto;
+    max-width: 800px; /* Limits width for better readability */
+    color: #555;
+    line-height: 1.6;
+}
+
+/* Image Placeholder */
+.image-placeholder {
+    display: block;
+    margin: 40px auto;
+    width: 200px;
+    height: 200px;
+    background-color: #ddd;
+    border: 2px dashed #bbb;
+    border-radius: 10px;
+    text-align: center;
+    line-height: 200px; /* Centers text vertically */
+    color: #888;
+}
+
+/* Footer Styles (using Roboto Slab) */
+footer {
+    margin-top: 40px;
+    padding: 20px 0;
+    background-color: #f1f1f1;
+    text-align: center;
+    font-family: 'Roboto Slab', serif; /* Apply Roboto Slab for the footer */
+    font-size: 14px;
+    color: #555;
+    border-top: 1px solid #ddd; /* Optional: top border for separation */
+}
+
+footer p {
+    margin: 0; /* Remove default margins on the footer text */
+}
+
+/* Grade-specific color coding */
+.grade-a {
+    color: #28a745; /* Green for A+, A, A- */
+}
+
+.grade-b {
+    color: #7cc57b; /* Lighter green for B+, B, B- */
+}
+
+.grade-c {
+    color: #ffc107; /* Yellow for C+, C, C- */
+}
+
+.grade-d {
+    color: #fd7e14; /* Orange for D+, D, D- */
+}
+
+.grade-f {
+    color: #6f42c1; /* Purple for F */
+}
+
+/* Default class for N/A or unknown grades */
+.default-grade {
+    color: #6c757d; /* Light gray for N/A */
 }

@@ -60,9 +60,25 @@ include "inc/head.inc.php";
 ?>
 
 <body>
-    <?php
-    include "inc/nav.inc.php";
-    ?>
+    <nav class="navbar navbar-expand-sm bg-secondary navbar-dark">
+        <div class="container">
+            <div class="navbar-brand">
+                <img src="images/logo.jpg" alt="GradeTracker Logo" class="navbar-logo" href="homepage.php">
+                <a class="navbar-brand-text">GradeTracker</a>
+            </div>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-links">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbar-links">
+                <div class="navbar-nav ms-auto">
+                    <a href="FirstPage.php" class="nav-link active">Home</a>
+                    <a href="Login.php" class="btn btn-primary">Login</a>
+                </div>
+            </div>
+        </div>
+    </nav>
     <div class="container mt-5">
         <form method="post" action="process_register.php">
             #question, shouldn't the student ID be assigned by system than chosen by student?

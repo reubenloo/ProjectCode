@@ -17,7 +17,6 @@ if (!$student_id) {
     echo "Please log in first.";
     exit;
 }
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -166,7 +165,36 @@ include "inc/head.inc.php";
 
                 foreach ($components as $comp) {
                     $grade_display = $comp['grade'] ?? 'N/A';
-                    echo "<tr><td>{$comp['component_name']}</td><td>{$grade_display}</td></tr>";
+                    
+                    // Determine CSS class
+                    $grade_class = 'default-grade'; // Default for N/A or invalid grades
+                    switch ($grade_display) {
+                        case 'A+':
+                        case 'A':
+                        case 'A-':
+                            $grade_class = 'grade-a';
+                            break;
+                        case 'B+':
+                        case 'B':
+                        case 'B-':
+                            $grade_class = 'grade-b';
+                            break;
+                        case 'C+':
+                        case 'C':
+                        case 'C-':
+                            $grade_class = 'grade-c';
+                            break;
+                        case 'D+':
+                        case 'D':
+                        case 'D-':
+                            $grade_class = 'grade-d';
+                            break;
+                        case 'F':
+                            $grade_class = 'grade-f';
+                            break;
+                    }
+
+                    echo "<tr><td>{$comp['component_name']}</td><td class='{$grade_class}'>{$grade_display}</td></tr>";
                 }
 
                 echo '</tbody></table>';
@@ -195,7 +223,7 @@ include "inc/head.inc.php";
                 $required_difference = $goal_percentage - $current_grade_percentage;
 
                 if ($required_difference <= 0) {
-                    echo "<h3>Required: Goal achieved already!</h3>";
+                    echo "<h3>Required: Goal achieved, Good Job!</h3>";
                 } else {
                     echo "<h3>Required: You need to increase your average by " . round($required_difference, 2) . "% to achieve $selected_goal.</h3>";
                 }

@@ -54,9 +54,25 @@ include "inc/head.inc.php";
 ?>
 
 <body>
-<?php
-    include "inc/nav.inc.php"; 
-    ?>
+    <nav class="navbar navbar-expand-sm bg-secondary navbar-dark">
+        <div class="container">
+            <div class="navbar-brand">
+                <img src="images/logo.jpg" alt="GradeTracker Logo" class="navbar-logo" href="homepage.php">
+                <a class="navbar-brand-text">GradeTracker</a>
+            </div>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-links">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbar-links">
+                <div class="navbar-nav ms-auto">
+                    <a href="FirstPage.php" class="nav-link active">Home</a>
+                    <a href="Register.php" class="nav-link">Register</a>
+                </div>
+            </div>
+        </div>
+    </nav>
     <h1>Student Login</h1>
     <p>
         Existing students log in here. For new students, plesae go to the
