@@ -2,26 +2,46 @@
 // Login.php
 session_start(); // Start session to manage login status
 
+// Session timeout for 30 mins
+if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > 1800)) {
+    session_unset();
+    session_destroy();
+    header("Location: login.php?msg=timeout");
+    exit();
+}
+$_SESSION['last_activity'] = time();
+
+// CSRF protection
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        die('CSRF token validation failed');
+    }
+}
+$_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+
 require_once 'validation_functions.php';
 
 // Handle form submission
 $login_error = "";
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Get user inputs
-    $student_id = trim($_POST['studentId']); // Trim input to remove leading/trailing spaces
+    $student_id = trim($_POST['student_id']); // Trim input to remove leading/trailing spaces
     $password = trim($_POST['password']);
 
     // Prepare SQL to get user credentials using a placeholder
-    $sql = "SELECT * FROM credentials WHERE student_id = ?";
+    $sql = "SELECT student_id, password FROM credentials WHERE student_id = ?";
     $stmt = $conn->prepare($sql);
     if ($stmt === false) {
-        die("Error preparing the statement: " . $conn->error);
+        error_log("Login prepare failed: " . $conn->error);
+        $login_error = "System error, please try again later.";
+    } else {
+        // Bind the student_id parameter (assuming student_id is VARCHAR)
+        $stmt->bind_param("s", $student_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
     }
 
-    // Bind the student_id parameter (assuming student_id is VARCHAR)
-    $stmt->bind_param("s", $student_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
+
 
     // Check if the student ID exists
     if ($result->num_rows > 0) {
@@ -31,15 +51,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if (password_verify($password, $row['password'])) {
             // Login successful
             $_SESSION['student_id'] = $student_id; // Store student ID in session
+            $_SESSION['last_login'] = time();
             header("Location: Homepage.php"); // Redirect to homepage
             exit();
         } else {
             // Invalid password
-            $login_error = "Invalid password. Please try again.";
+            $login_error = "Invalid credentials. Please try again.";
         }
     } else {
         // Student ID not found
-        $login_error = "No account found with that Student ID. Please register first.";
+        $login_error = "Invalid credentials. Please try again.";
     }
 
     // Close the statement
@@ -73,6 +94,9 @@ include "inc/head.inc.php";
             </div>
         </div>
     </nav>
+    <?php
+    include "inc/nav.inc.php";
+    ?>
     <h1>Student Login</h1>
     <p>
         Existing students log in here. For new students, plesae go to the
@@ -85,21 +109,24 @@ include "inc/head.inc.php";
             </div>
         <?php endif; ?>
         <form method="post" action="">
-            <div class="form-group">
-                <label for="studentId">Student ID:</label>
-                <input type="text" class="form-control" id="student_id" name="student_id" placeholder="Enter student ID" required>
+            <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
+            <div class="form-group mb-3">
+                <label for="student_id">Student ID:</label>
+                <input type="text" class="form-control" id="student_id" name="student_id" placeholder="Enter student ID" required pattern="[A-Za-z0-9]{8}">
             </div>
-            <div class="form-group">
+            <div class="form-group mb-3">
                 <label for="password">Password:</label>
                 <input type="password" class="form-control" id="password" name="password" placeholder="Enter password" required>
             </div>
             <button type="submit" class="btn btn-primary">Login</button>
             <div class="mt-3">
-                <a href="UpdatePassword.php">Forgot Password?</a><br>
-                <a href="Register.php">No account? Click here to register</a>
+                <a href="update_password.php">Forgot Password?</a><br>
+                <a href="register.php">No account? Click here to register</a>
             </div>
         </form>
     </div>
+
+    <?php include "inc/footer.inc.php"; ?>
 </body>
 
 </html>

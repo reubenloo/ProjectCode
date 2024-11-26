@@ -5,8 +5,17 @@
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-// Include the database connection file
-include 'db_connect.php'; // Connection to the database
+// Require the database connection file once
+require_once 'db_connect.php'; // Connection to the database
+
+// CSRF Protection
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        die('CSRF token validation failed');
+    }
+}
+$_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+
 
 // Handle form submission
 $register_error = "";
@@ -14,44 +23,55 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Get user inputs from the form
     $student_id = trim($_POST['studentId']);
     $password = trim($_POST['password']);
-    $confirm_password = trim($_POST['confirmPassword']);
+    $confirm_password = trim($_POST['confirm_password']);
     $email = trim($_POST['email']);
 
+    if (!preg_match("/^[A-Za-z0-9]{8}$/", $student_id)) {
+        $error = "Student ID must be 8 characters of letters and numbers.";
+    }
+    elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error = "Invalid email format.";
+    }
+    elseif (strlen($password) < 8) {
+        $error = "Password must be at least 8 characters long.";
+    }
     // Check if passwords match
-    if ($password !== $confirm_password) {
+    elseif ($password !== $confirm_password) {
         $register_error = "Passwords do not match!";
-    } else {
-        // Hash the password before storing it in the database
-        $hashed_password = password_hash($password, PASSWORD_BCRYPT);
+    } 
+    else {
+        try {
+            // Check if student ID already exists
+            $check_sql = "SELECT student_id FROM credentials WHERE student_id = ? OR email = ?";
+            $check_stmt = $conn->prepare($check_sql);
+            $check_stmt->bind_param("ss", $student_id, $email);
+            $check_stmt->execute();
 
-        // Insert the data into the database
-        $sql = "INSERT INTO credentials (student_id, password, email) VALUES (?, ?, ?)";
-        $stmt = $conn->prepare($sql);
-        if ($stmt === false) {
-            die("Error preparing the statement: " . $conn->error);
-        }
-
-        $stmt->bind_param("sss", $student_id, $hashed_password, $email);
-
-        if ($stmt->execute()) {
-            // Registration successful
-            header("Location: Login.php"); // Redirect to the login page
-            exit();
-        } else {
-            // Error handling if there was an issue executing the statement
-            if ($conn->errno == 1062) {
-                // Duplicate entry error
-                $register_error = "A user with this student ID or email already exists.";
+            if ($check_stmt->get_result()->num_rows > 0) {
+                $error = "Student ID or email already registered.";
             } else {
-                $register_error = "Error: " . $stmt->error;
+                // Insert new student
+                // Hash the password before storing it in the database
+                $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+                $insert_sql = "INSERT INTO credentials (student_id, email, password) VALUES (?, ?, ?)";
+                $insert_stmt = $conn->prepare($insert_sql);
+                $insert_stmt->bind_param("sss", $student_id, $email, $hashed_password);
+                
+                if ($insert_stmt->execute()) {
+                    $success = "Registration successful! You can now login.";
+                } else {
+                    $error = "Registration failed. Please try again.";
+                }
+                $insert_stmt->close();
             }
+            $check_stmt->close();
+        } catch (Exception $e) {
+            $error = "System error. Please try again later.";
+            error_log($e->getMessage());
         }
-
-        // Close the statement
-        $stmt->close();
     }
 }
-?>
+?>›
 <!DOCTYPE html>
 <html lang="en">
 
