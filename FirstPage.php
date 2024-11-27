@@ -28,11 +28,11 @@ include "inc/head.inc.php";
         </div>
     </nav>
 
-    <!-- Main Content Section -->
+    <!-- Main Content Description -->
     <div class="container mt-5 text-center"> <!-- Center content horizontally -->
         <h1>Welcome to Grade Tracker</h1>
 
-        <!-- First Section -->
+        <!-- First Description of website -->
         <h2 class="subheading mt-4">Calculate and Collect Results</h2>
         <figure>
         <img class="img-thumbnail img-fluid" src="images/Calculate.jpg" alt="Calculate" style="width: 35%; height: auto;" />
@@ -44,7 +44,7 @@ include "inc/head.inc.php";
             individual grades and current overall score, enabling them to observe their academic performance in real time!
         </p>
 
-        <!-- Second Section -->
+        <!-- Second Description of website -->
         <h2 class="subheading mt-4">Improve and Set Goals</h2>
         <figure>
             <img class="img-thumbnail img-fluid" src="images/Goals.jpg" alt="Goals" style="width: 45%; height: auto;"/>

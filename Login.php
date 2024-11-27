@@ -8,11 +8,11 @@ include 'db_connect.php'; // Connection to the database
 // Catch and display errors
 $errors = [];
 
-// Handle form submission
+// Handling the form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     try {
-        // Get user inputs
-        $student_id = trim($_POST['studentId']); // Trim input to remove leading/trailing spaces
+        // Gets the user inputs
+        $student_id = trim($_POST['studentId']); // Trims the input to remove leading/trailing spaces
         $password = trim($_POST['password']);
 
         // Validate Student ID is 7 digits
@@ -21,38 +21,38 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         if (empty($errors)) {
-            // Prepare SQL to get user credentials using a placeholder
+            // Prepare SQL to get the user credentials using a placeholder
             $sql = "SELECT * FROM credentials WHERE student_id = ?";
             $stmt = $conn->prepare($sql);
             if (!$stmt) {
                 throw new Exception("Database error during login");
             }
 
-            // Bind the student_id parameter (assuming student_id is VARCHAR)
+            // Binds the student_id parameter (assuming student_id is VARCHAR)
             $stmt->bind_param("s", $student_id);
             $stmt->execute();
             $result = $stmt->get_result();
 
-            // Check if the student ID exists
+            // Checks if the student ID already exists in the database
             if ($result->num_rows > 0) {
                 $row = $result->fetch_assoc();
 
-                // Verify the password
+                // Verifies the password
                 if (password_verify($password, $row['password'])) {
                     // Login successful
-                    $_SESSION['student_id'] = $student_id; // Store student ID in session
-                    header("Location: Homepage.php"); // Redirect to homepage
+                    $_SESSION['student_id'] = $student_id; // Stores the student ID in session
+                    header("Location: Homepage.php"); // Redirects the user to the homepage
                     exit();
                 } else {
-                    // Invalid password
+                    // Lets the user know that the password is invalid
                     $errors['password'] = "Invalid password. Please try again.";
                 }
             } else {
-                // Student ID not found
+                // Shows and error statement if the Student ID is not found
                 $errors['studentId'] = "No account found with that Student ID. Please register first.";
             }
 
-            // Close the statement
+            // Closes the statement
             $stmt->close();
         }
     } catch (Exception $e) {
@@ -81,7 +81,6 @@ include "inc/head.inc.php";
             <div class="collapse navbar-collapse" id="navbar-links">
                 <div class="navbar-nav ms-auto">
                     <a href="FirstPage.php" class="nav-link active">Home</a>
-                    <a href="Register.php" class="btn btn-primary">Register</a>
                 </div>
             </div>
         </div>

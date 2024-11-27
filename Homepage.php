@@ -50,9 +50,9 @@ function percentage_to_grade($percentage) {
     <div class="container mt-5">
         <h1>Welcome to GradeTracker</h1>
 
-        <!-- Table to show modules and their current grades -->
+        <!-- Table to show their enrolled modules and their current average grades -->
         <?php
-        // SQL Query to get all components and calculate average grade
+        // SQL Query to get all components and calculate the average grade
         $sql = "
             SELECT 
                 m.module_name, 
@@ -103,16 +103,16 @@ function percentage_to_grade($percentage) {
             // If no modules are enrolled, display a single row with "N/A"
             echo '<tr><td class="text-center">N/A</td><td class="text-center">N/A</td></tr>';
         } else {
-            // Display modules and grades if found
+            // Display enrolled modules with grades if found
             while ($row = $result->fetch_assoc()) {
                 $module_name = $row['module_name'];
                 $total_components = $row['total_components'];
                 $total_graded_components = $row['total_graded_components'];
                 $total_grade_percentage = $row['total_grade_percentage'];
 
-                // Determine if grades exist
+                // Determines if the grades exist/ grades have been updated
                 if ($total_graded_components > 0) {
-                    // Calculate average grade percentage
+                    // Calculates the average grade percentage
                     $average_grade_percentage = ($total_grade_percentage / $total_components);
                     $average_grade_letter = percentage_to_grade($average_grade_percentage);
                 } else {
@@ -129,7 +129,6 @@ function percentage_to_grade($percentage) {
         ?>
     </div>
 
-    <!-- Include Footer -->
     <?php include "inc/footer.inc.php"; ?>
 </body>
 

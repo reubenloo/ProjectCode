@@ -15,7 +15,6 @@
                 <a href="Index.php" class="nav-link">Grades</a>
                 <a href="Update.php" class="nav-link">Update</a>
                 <a href="Profile.php" class="nav-link">Profile</a>
-                <a href="Register.php" class="nav-link">Register</a>
                 <a href="Login.php" class="btn btn-primary">Logout</a>
             </div>
         </div>

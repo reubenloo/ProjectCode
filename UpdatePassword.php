@@ -1,29 +1,25 @@
 <?php
 // UpdatePassword.php
 
-// Enable error reporting for debugging
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
-
-// Include the database connection file
+// Includes the database connection file
 include 'db_connect.php';
 ?>
 
 <?php
-// Handle the form submission
+// Handles the form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     try {
-        // Get user inputs from the form
+        // Gets the user inputs from the form
         $student_id = $_POST['studentId'];
         $new_password = $_POST['newPassword'];
         $confirm_password = $_POST['confirmPassword'];
 
-        // Validate Student ID
+        // Validates the Student ID
         if (!preg_match('/^\d{7}$/', $student_id)) {
             $errors['studentId'] = "Student ID must be exactly 7 digits";
         }
 
-        // Validate Password
+        // Validates the Password so its secure
         if (strlen($new_password) < 8) {
             $errors['newPassword'] = "Password must be at least 8 characters long";
         } elseif (
@@ -35,13 +31,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $errors['newPassword'] = "Password must include uppercase, lowercase, number, and special character";
         }
 
-        // Check if passwords match
+        // Checks if the 2 passwords match
         if ($new_password !== $confirm_password) {
             $errors['confirmPassword'] = "Passwords do not match";
         }
 
         if (empty($errors)) {
-            // Check if student ID exists in the database
+            // Check if the student ID exists in the database so that there are no duplicates
             $sql = "SELECT * FROM credentials WHERE student_id = ?";
             $stmt = $conn->prepare($sql);
             if (!$stmt) {
@@ -56,10 +52,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if ($result->num_rows === 0) {
                 $errors['studentId'] = "No account found with that Student ID";
             } else {
-                // Hash the new password before updating it in the database
+                // Hash the new password before updating it in the database for security reasons
                 $hashed_password = password_hash($new_password, PASSWORD_BCRYPT);
 
-                // Update the password in the database
+                // Updates the password in the database as a hash
                 $update_sql = "UPDATE credentials SET password = ? WHERE student_id = ?";
                 $update_stmt = $conn->prepare($update_sql);
 

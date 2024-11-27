@@ -2,10 +2,10 @@
 // Update.php
 session_start();
 
-// Include the database connection file
+// Includes the database connection file
 include 'db_connect.php';
 
-// Assume the student ID is stored in session after login
+// Assumes the student ID is stored in the session after login
 $student_id = $_SESSION['student_id'] ?? null;
 
 if (!$student_id) {
@@ -13,7 +13,7 @@ if (!$student_id) {
     exit;
 }
 
-// Handle form submission for enrolling in a module
+// Handles the form submission for enrolling in an unenrolled module
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['enroll_module'])) {
     $module_id = $_POST['enroll_module'];
 
@@ -42,11 +42,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['enroll_module'])) {
     $stmt_check->close();
 }
 
-// Handle form submission for deleting a module
+// Handles the form submission for deleting or unenrolling the module
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['delete_module'])) {
     $student_module_id = $_POST['delete_module'];
 
-    // Check if the module exists for the student
+    // Check if the student has enrolled for the module
     $sql_check = "SELECT student_module_id FROM student_modules WHERE student_id = ? AND student_module_id = ?";
     $stmt_check = $conn->prepare($sql_check);
     $stmt_check->bind_param("ii", $student_id, $student_module_id);
@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['delete_module'])) {
     $result_check = $stmt_check->get_result();
 
     if ($result_check->num_rows > 0) {
-        // If enrolled, delete the module
+        // If enrolled, deletes the previous grades and module information from the user
         $sql_delete = "DELETE FROM student_modules WHERE student_id = ? AND student_module_id = ?";
         $stmt_delete = $conn->prepare($sql_delete);
         $stmt_delete->bind_param("ii", $student_id, $student_module_id);
@@ -71,14 +71,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['delete_module'])) {
     $stmt_check->close();
 }
 
-// Handle form submission for updating the grade
+// Handles the form submission for updating the grade
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['grade'], $_POST['module'], $_POST['component'])) {
-    // Get user input from form
+    // Gets the user input from the form
     $student_module_id = $_POST['module'];
     $component_id = $_POST['component'];
     $grade = $_POST['grade'];
 
-    // Check if the grade already exists for the given student_module_id and component_id
+    // Checks if the grade already exists for the given student_module_id and component_id
     $sql_check = "SELECT * FROM student_grades WHERE student_module_id = ? AND component_id = ?";
     $stmt_check = $conn->prepare($sql_check);
     $stmt_check->bind_param("ii", $student_module_id, $component_id);
@@ -86,19 +86,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['grade'], $_POST['modul
     $result_check = $stmt_check->get_result();
 
     if ($result_check->num_rows > 0) {
-        // Record exists, perform an update
+        // If the record exists, perform the update
         $sql_update = "UPDATE student_grades SET grade = ? WHERE student_module_id = ? AND component_id = ?";
         $stmt_update = $conn->prepare($sql_update);
         $stmt_update->bind_param("sii", $grade, $student_module_id, $component_id);
     } else {
-        // Record does not exist, perform an insert
+        // If the record does not exist, perform an insert
         $sql_insert = "INSERT INTO student_grades (student_module_id, component_id, grade) VALUES (?, ?, ?)";
         $stmt_update = $conn->prepare($sql_insert);
         $stmt_update->bind_param("iis", $student_module_id, $component_id, $grade);
     }
 
     if ($stmt_update->execute()) {
-        // Redirect back to Index.php after update
+        // Redirects the user back to Index.php after update
         header('Location: Index.php');
         exit();
     } else {
@@ -122,14 +122,14 @@ include "inc/head.inc.php";
     ?>
     <div class="container mt-5">
 
-        <!-- Enroll in Module Section -->
+        <!-- For Enrolling in the Module -->
         <form method="post" action="">
             <div class="form-group">
                 <label for="enroll_module">Enroll in a Module:</label>
                 <select id="enroll_module" name="enroll_module" class="form-control mb-3" required>
                     <option value="" disabled selected>Select a module</option>
                     <?php
-                    // Fetch all modules from the database
+                    // Fetches all the modules from the database
                     $sql = "SELECT module_id, module_name FROM modules";
                     $stmt = $conn->prepare($sql);
                     $stmt->execute();
@@ -146,14 +146,14 @@ include "inc/head.inc.php";
             </div>
         </form>
 
-        <!-- Delete Module Section -->
+        <!-- For deleting the Module -->
         <form method="post" action="">
             <div class="form-group">
                 <label for="delete_module">Unenroll from a Module:</label>
                 <select id="delete_module" name="delete_module" class="form-control mb-3" required>
                     <option value="" disabled selected>Select a module</option>
                     <?php
-                    // Fetch modules that the student is enrolled in
+                    // Fetches modules that the student is enrolled in
                     $sql = "SELECT sm.student_module_id, m.module_name 
                             FROM student_modules sm
                             JOIN modules m ON sm.module_id = m.module_id
@@ -174,14 +174,14 @@ include "inc/head.inc.php";
             </div>
         </form>
 
-        <!-- Update Grade Section -->
+        <!-- For updating the Grade -->
         <form method="post" action="">
             <div class="form-group">
                 <label for="module">Module to Update:</label>
                 <select id="module" name="module" class="form-control" required>
                     <option value="" disabled selected>Select a module</option>
                     <?php
-                    // Fetch modules that the student is enrolled in
+                    // Fetches the modules that the student is enrolled in
                     $sql = "SELECT sm.student_module_id, m.module_name 
                             FROM student_modules sm
                             JOIN modules m ON sm.module_id = m.module_id
@@ -203,7 +203,6 @@ include "inc/head.inc.php";
                 <label for="component">Component to Update:</label>
                 <select id="component" name="component" class="form-control" required>
                     <option value="" disabled selected>Select a component</option>
-                    <!-- Options will be populated via JavaScript -->
                 </select>
             </div>
             <div class="form-group">
@@ -235,12 +234,12 @@ include "inc/head.inc.php";
     document.getElementById('module').addEventListener('change', function() {
         var student_module_id = this.value;
 
-        // Clear the component select
+        // Clears the component selected
         var componentSelect = document.getElementById('component');
         componentSelect.innerHTML = '<option value="" disabled selected>Select a component</option>';
 
         if (student_module_id) {
-            // Make an AJAX request to fetch components
+            // Makes an AJAX request to fetch the components
             var xhr = new XMLHttpRequest();
             xhr.open('GET', 'get_components.php?student_module_id=' + student_module_id, true);
             xhr.onload = function() {

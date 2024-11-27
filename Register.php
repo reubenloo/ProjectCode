@@ -5,13 +5,13 @@
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-// Include the database connection file
+// Includes the database connection file
 include 'db_connect.php'; // Connection to the database
 
 $errors = [];
 $form_data = [];
 
-// Handle form submission
+// Handles the form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     try {
         // Get user inputs from the form
@@ -20,18 +20,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $confirm_password = trim($_POST['confirmPassword']);
         $email = trim($_POST['email']);
 
-        // Store form data for re-populating the form (so user doesn't have to type again)
+        // Stores the form data for re-populating the form (so user doesn't have to type the data again)
         $form_data = [
             'studentId' => $student_id,
             'email' => $email
         ];
 
-        // Validate student ID is 7 digits
+        // Validates the student ID such that it is 7 digits
         if (!preg_match('/^\d{7}$/', $student_id)) {
             $errors['studentId'] = "Student ID must be exactly 7 digits";
         }
 
-        // Validate password is complex (8 chars long and is alphanumeric with special chars)
+        // Validating such that the password is complex (8 chars long and is alphanumeric with special chars)
         if (strlen($password) < 8) {
             $errors['password'] = "Password must be at least 8 characters long";
         } elseif (
@@ -43,7 +43,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $errors['password'] = "Password must include uppercase, lowercase, number, and special character";
         }
 
-        // Validate if passwords match
+        // Validate if the 2 passwords match
         if ($password !== $confirm_password) {
             $errors['confirmPassword'] = "Passwords do not match!";
         }
@@ -53,7 +53,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         if (empty($errors)) {
-            // First, check if student ID already exists
+            // Checks if the student ID already exists to prevent duplicates
             $check_sql = "SELECT student_id FROM credentials WHERE student_id = ?";
             $check_stmt = $conn->prepare($check_sql);
             if (!$check_stmt) {
@@ -67,7 +67,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if ($result->num_rows > 0) {
                 $errors['studentId'] = "This Student ID is already registered";
             } else {
-                // Then check if email already exists
+                // Checks if the email already exists to prevent duplicates
                 $check_email_sql = "SELECT email FROM credentials WHERE email = ?";
                 $check_email_stmt = $conn->prepare($check_email_sql);
                 if (!$check_email_stmt) {
@@ -81,8 +81,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 if ($email_result->num_rows > 0) {
                     $errors['email'] = "This email is already registered";
                 } else {
-                    // Insert the data into the database
-                    // Hash the password before storing it in the database
+                    // Inserts the data into the database
+                    // Hash the password before storing it in the database for security reasons
                     $hashed_password = password_hash($password, PASSWORD_BCRYPT);
                     $sql = "INSERT INTO credentials (student_id, password, email) VALUES (?, ?, ?)";
                     $stmt = $conn->prepare($sql);
@@ -92,13 +92,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         $stmt->bind_param("sss", $student_id, $hashed_password, $email);
 
                         if ($stmt->execute()) {
-                            // Registration successful
-                            header("Location: Login.php"); // Redirect to the login page
+                            // If the registration is successful
+                            header("Location: Login.php"); // Redirect the user to the login page
                             exit();
                         } else {
-                            // Error handling if there was an issue executing the statement
+                            // For error handling if there was an issue executing the statement
                             if ($conn->errno == 1062) {
-                                // Duplicate entry error
+                                // Indicate the duplicate entry error
                                 $errors['general'] = "A user with this student ID or email already exists.";
                             } else {
                                 $errors['general'] = "Error: " . $stmt->error;
@@ -123,9 +123,23 @@ include "inc/head.inc.php";
 ?>
 
 <body>
-    <?php
-    include "inc/nav.inc.php";
-    ?>
+    <nav class="navbar navbar-expand-sm bg-secondary navbar-dark">
+        <div class="container">
+            <div class="navbar-brand">
+                <img src="images/logo.jpg" alt="GradeTracker Logo" class="navbar-logo">
+                <a class="navbar-brand-text">GradeTracker</a>
+            </div>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-links">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbar-links">
+                <div class="navbar-nav ms-auto">
+                    <a href="FirstPage.php" class="nav-link active">Home</a>
+                    <a href="Login.php" class="btn btn-primary">Login</a>
+                </div>
+            </div>
+        </div>
+    </nav>
     <div class="container mt-5">
         <?php if (isset($errors['general'])): ?>
             <div class="alert alert-danger" role="alert">

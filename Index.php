@@ -1,13 +1,8 @@
 <?php
 // Index.php
-session_start(); // Start session to get student ID from login
+session_start(); // Starts the session to get student ID from login
 
-// Enable error reporting for debugging purposes (remove in production)
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
-// Include database connection file
+// Includes the database connection file
 include 'db_connect.php';
 
 // Assume the student ID is stored in session after login
@@ -36,7 +31,7 @@ include "inc/head.inc.php";
                 <option value="" disabled selected>Select a module</option>
 
                 <?php
-                // Fetch modules for the logged-in student
+                // Fetches the enrolled modules for the logged-in student
                 $sql = "SELECT sm.student_module_id, m.module_name 
                         FROM student_modules sm
                         JOIN modules m ON sm.module_id = m.module_id
@@ -86,7 +81,7 @@ include "inc/head.inc.php";
 
         <?php
         if ($selected_module != '') {
-            // Fetch components and grades
+            // Fetches the components and grades of the enrolled module
             $sql = "SELECT c.component_name, c.component_id, sg.grade
                     FROM components c
                     JOIN student_modules sm ON c.module_id = sm.module_id
@@ -108,7 +103,7 @@ include "inc/head.inc.php";
                 exit;
             }
 
-            // Initialize grade mapping
+            // Initializes the grade system to assign the grades to percentage
             $grade_to_percentage = array(
                 'A+' => 85,
                 'A'  => 80,
@@ -128,7 +123,7 @@ include "inc/head.inc.php";
             $percentage_to_grade = array_flip($grade_to_percentage);
             krsort($percentage_to_grade);
 
-            // Initialize variables
+            // Initialize the variables
             $total_components = 0;
             $grade_sum = 0;
 
@@ -140,7 +135,7 @@ include "inc/head.inc.php";
 
                 $total_components++;
 
-                // Treat NULL grades or grades not in mapping as 'F' (0%)
+                // Treats NULL grades or grades not in mapping as 'F' (0%)
                 if ($grade_letter === null || !isset($grade_to_percentage[$grade_letter])) {
                     $grade_percentage = 0; // 'F' or 'N/A' equivalent to 0%
                 } else {
@@ -157,7 +152,7 @@ include "inc/head.inc.php";
 
             $stmt->close();
 
-            // Display components and grades
+            // Displays the components and grades of the enrolled module
             if (count($components) > 0) {
                 echo '<table class="table table-bordered mt-3">';
                 echo '<thead><tr><th>Component</th><th>Grade</th></tr></thead>';
@@ -166,8 +161,8 @@ include "inc/head.inc.php";
                 foreach ($components as $comp) {
                     $grade_display = $comp['grade'] ?? 'N/A';
 
-                    // Determine CSS class
-                    $grade_class = 'default-grade'; // Default for N/A or invalid grades
+                    // Determine CSS class to give the average grade attained colour
+                    $grade_class = 'default-grade'; // The default for N/A or invalid grades
                     switch ($grade_display) {
                         case 'A+':
                         case 'A':
@@ -202,20 +197,20 @@ include "inc/head.inc.php";
                 echo "<p>No components found for the selected module.</p>";
             }
 
-            // Calculate current grade percentage
+            // Calculates the current avearage grade percentage
             if ($total_components > 0) {
                 $current_grade_percentage = $grade_sum / $total_components;
             } else {
                 $current_grade_percentage = 0;
             }
 
-            // Get current grade letter
+            // Gets the current grade letter
             $current_grade_letter = get_grade_letter($current_grade_percentage, $percentage_to_grade);
 
-            // Display current grade
+            // Displays the current attained grade
 
-            // Get the appropriate grade class
-            $grade_class = 'default-grade'; // Default class
+            // Gets the appropriate grade class to give colour to grade letter
+            $grade_class = 'default-grade'; // The default class
             $first_letter = substr($current_grade_letter, 0, 1);
             switch ($first_letter) {
                 case 'A':
@@ -237,11 +232,11 @@ include "inc/head.inc.php";
 
             echo "<h3>Current Average Grade: <span class='$grade_class'>$current_grade_letter (" . round($current_grade_percentage, 2) . "%)</span></h3>";
 
-            // If goal is selected, calculate required difference
+            // If goal is selected, this calculates the difference in score that the student must attain
             if ($selected_goal != '' && isset($grade_to_percentage[$selected_goal])) {
                 $goal_percentage = $grade_to_percentage[$selected_goal];
 
-                // Calculate the required difference
+                // Calculates the required difference
                 $required_difference = $goal_percentage - $current_grade_percentage;
 
                 if ($required_difference <= 0) {
