@@ -106,3 +106,51 @@ footer p {
 .default-grade {
     color: #6c757d; /* Light gray for N/A */
 }
+
+/* Resize images to 70% of their original size */
+.img-thumbnail {
+    width: 70%; /* Full width of container */
+    max-width: 100px; /* Maximum width */
+    height: auto;  /* Maintain aspect ratio */
+    display: block; /* Ensures the image is centered */
+    margin: 0 auto 20px; /* Centers the image and adds some bottom margin */
+    object-fit: contain; /* Ensures entire image is visible */
+}
+
+.img-fluid {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Add this to your CSS */
+a {
+    color: #0d6efd; /* Bootstrap's default link color */
+    text-decoration: none;
+}
+
+a:hover {
+    color: #0a58ca; /* Slightly darker on hover */
+    text-decoration: underline;
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.container {
+    flex: 1 0 auto;
+}
+
+footer {
+    flex-shrink: 0;
+    padding: 20px;
+    background-color: #f8f9fa;
+    margin-top: auto;
+}

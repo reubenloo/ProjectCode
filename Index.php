@@ -165,7 +165,7 @@ include "inc/head.inc.php";
 
                 foreach ($components as $comp) {
                     $grade_display = $comp['grade'] ?? 'N/A';
-                    
+
                     // Determine CSS class
                     $grade_class = 'default-grade'; // Default for N/A or invalid grades
                     switch ($grade_display) {
@@ -213,7 +213,29 @@ include "inc/head.inc.php";
             $current_grade_letter = get_grade_letter($current_grade_percentage, $percentage_to_grade);
 
             // Display current grade
-            echo "<h3>Current Average Grade: $current_grade_letter (" . round($current_grade_percentage, 2) . "%)</h3>";
+
+            // Get the appropriate grade class
+            $grade_class = 'default-grade'; // Default class
+            $first_letter = substr($current_grade_letter, 0, 1);
+            switch ($first_letter) {
+                case 'A':
+                    $grade_class = 'grade-a';
+                    break;
+                case 'B':
+                    $grade_class = 'grade-b';
+                    break;
+                case 'C':
+                    $grade_class = 'grade-c';
+                    break;
+                case 'D':
+                    $grade_class = 'grade-d';
+                    break;
+                case 'F':
+                    $grade_class = 'grade-f';
+                    break;
+            }
+
+            echo "<h3>Current Average Grade: <span class='$grade_class'>$current_grade_letter (" . round($current_grade_percentage, 2) . "%)</span></h3>";
 
             // If goal is selected, calculate required difference
             if ($selected_goal != '' && isset($grade_to_percentage[$selected_goal])) {
@@ -230,7 +252,8 @@ include "inc/head.inc.php";
             }
         }
 
-        function get_grade_letter($percentage, $percentage_to_grade) {
+        function get_grade_letter($percentage, $percentage_to_grade)
+        {
             foreach ($percentage_to_grade as $perc => $grade) {
                 if ($percentage >= $perc) {
                     return $grade;

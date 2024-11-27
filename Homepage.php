@@ -1,70 +1,136 @@
+<?php
+session_start(); // Start session to get student ID from login
+
+// Enable error reporting for debugging purposes (remove in production)
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+// Include database connection file
+include 'db_connect.php';
+
+// Assume the student ID is stored in session after login
+$student_id = $_SESSION['student_id'] ?? null;
+
+if (!$student_id) {
+    echo "Please log in first.";
+    exit;
+}
+
+/**
+ * Converts a percentage to a grade letter (A+, A, A-, etc.).
+ * @param float|null $percentage The average percentage grade.
+ * @return string The corresponding grade letter.
+ */
+function percentage_to_grade($percentage) {
+    if ($percentage === null) return 'N/A'; // No grade available
+    if ($percentage >= 85) return 'A+';
+    if ($percentage >= 80) return 'A';
+    if ($percentage >= 75) return 'A-';
+    if ($percentage >= 70) return 'B+';
+    if ($percentage >= 65) return 'B';
+    if ($percentage >= 60) return 'B-';
+    if ($percentage >= 55) return 'C+';
+    if ($percentage >= 50) return 'C';
+    if ($percentage >= 45) return 'C-';
+    if ($percentage >= 40) return 'D+';
+    if ($percentage >= 35) return 'D';
+    if ($percentage >= 30) return 'D-';
+    return 'F';
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
-<?php
-include "inc/head.inc.php";
-?>
+
+<?php include "inc/head.inc.php"; ?>
 
 <body>
-    <?php
-    include "inc/nav.inc.php";  // Include navigation (e.g., menu bar).
-    ?>
+    <?php include "inc/nav.inc.php"; ?>
+
     <div class="container mt-5">
         <h1>Welcome to GradeTracker</h1>
 
         <!-- Table to show modules and their current grades -->
-        <table class="table table-bordered mt-3">
-            <thead>
-                <tr>
-                    <th>Module Name</th>
-                    <th>Current Grade</th>
-                </tr>
-            </thead>
-            <tbody>
+        <?php
+        // SQL Query to get all components and calculate average grade
+        $sql = "
+            SELECT 
+                m.module_name, 
+                COUNT(c.component_id) AS total_components, 
+                SUM(
+                    CASE 
+                        WHEN sg.grade = 'A+' THEN 85
+                        WHEN sg.grade = 'A' THEN 80
+                        WHEN sg.grade = 'A-' THEN 75
+                        WHEN sg.grade = 'B+' THEN 70
+                        WHEN sg.grade = 'B' THEN 65
+                        WHEN sg.grade = 'B-' THEN 60
+                        WHEN sg.grade = 'C+' THEN 55
+                        WHEN sg.grade = 'C' THEN 50
+                        WHEN sg.grade = 'C-' THEN 45
+                        WHEN sg.grade = 'D+' THEN 40
+                        WHEN sg.grade = 'D' THEN 35
+                        WHEN sg.grade = 'D-' THEN 30
+                        WHEN sg.grade = 'F' THEN 0
+                        ELSE NULL -- Keep grades as NULL if missing
+                    END
+                ) AS total_grade_percentage,
+                SUM(
+                    CASE 
+                        WHEN sg.grade IS NOT NULL THEN 1
+                        ELSE 0
+                    END
+                ) AS total_graded_components
+            FROM modules m
+            LEFT JOIN student_modules sm ON sm.module_id = m.module_id AND sm.student_id = ?
+            LEFT JOIN components c ON c.module_id = m.module_id
+            LEFT JOIN student_grades sg ON sg.component_id = c.component_id AND sg.student_module_id = sm.student_module_id
+            WHERE sm.student_id = ?
+            GROUP BY m.module_name;
+        ";
 
-            <?php
-            // Fetch all modules the student is enrolled in, along with their grade
-            $sql = "SELECT m.module_name, 
-                           COALESCE(sg.grade, 'N/A') AS grade
-                    FROM modules m
-                    LEFT JOIN student_modules sm ON sm.module_id = m.module_id AND sm.student_id = ?
-                    LEFT JOIN student_grades sg ON sg.student_module_id = sm.student_module_id
-                    WHERE sm.student_id = ?";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("ii", $student_id, $student_id); // Bind student ID twice: for both joins
-            $stmt->execute();
-            $result = $stmt->get_result();
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("ii", $student_id, $student_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
 
-            $module_found = false;
+        // Start table
+        echo '<table class="table table-bordered mt-3">';
+        echo '<thead><tr><th>Module Name</th><th>Average Grade</th></tr></thead>';
+        echo '<tbody>';
 
+        if ($result->num_rows == 0) {
+            // If no modules are enrolled, display a single row with "N/A"
+            echo '<tr><td class="text-center">N/A</td><td class="text-center">N/A</td></tr>';
+        } else {
+            // Display modules and grades if found
             while ($row = $result->fetch_assoc()) {
                 $module_name = $row['module_name'];
-                $grade = $row['grade']; // This will show 'N/A' if no grade is assigned
+                $total_components = $row['total_components'];
+                $total_graded_components = $row['total_graded_components'];
+                $total_grade_percentage = $row['total_grade_percentage'];
 
-                // Check if the student is enrolled in any module
-                $module_found = true;
+                // Determine if grades exist
+                if ($total_graded_components > 0) {
+                    // Calculate average grade percentage
+                    $average_grade_percentage = ($total_grade_percentage / $total_components);
+                    $average_grade_letter = percentage_to_grade($average_grade_percentage);
+                } else {
+                    // If no grades exist, display N/A
+                    $average_grade_letter = 'N/A';
+                }
 
-                echo "<tr><td>{$module_name}</td><td>{$grade}</td></tr>";
+                echo "<tr><td>{$module_name}</td><td>{$average_grade_letter}</td></tr>";
             }
+        }
 
-            $stmt->close();
-
-            // If no modules were found, display N/A for both module name and grade
-            if (!$module_found) {
-                echo "<tr><td colspan='2' class='text-center'>N/A</td></tr>";  // Improved 'N/A' display for no modules
-            }
-
-            ?>
-
-            </tbody>
-        </table>
-
+        echo '</tbody></table>';
+        $stmt->close();
+        ?>
     </div>
 
-    <!-- Bootstrap 5 JS Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-    <?php
-    include "inc/footer.inc.php";  // Include footer
-    ?>
+    <!-- Include Footer -->
+    <?php include "inc/footer.inc.php"; ?>
 </body>
+
 </html>

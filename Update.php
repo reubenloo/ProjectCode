@@ -42,6 +42,35 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['enroll_module'])) {
     $stmt_check->close();
 }
 
+// Handle form submission for deleting a module
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['delete_module'])) {
+    $student_module_id = $_POST['delete_module'];
+
+    // Check if the module exists for the student
+    $sql_check = "SELECT student_module_id FROM student_modules WHERE student_id = ? AND student_module_id = ?";
+    $stmt_check = $conn->prepare($sql_check);
+    $stmt_check->bind_param("ii", $student_id, $student_module_id);
+    $stmt_check->execute();
+    $result_check = $stmt_check->get_result();
+
+    if ($result_check->num_rows > 0) {
+        // If enrolled, delete the module
+        $sql_delete = "DELETE FROM student_modules WHERE student_id = ? AND student_module_id = ?";
+        $stmt_delete = $conn->prepare($sql_delete);
+        $stmt_delete->bind_param("ii", $student_id, $student_module_id);
+        if ($stmt_delete->execute()) {
+            echo "<div class='alert alert-success'>Successfully unenrolled from module.</div>";
+        } else {
+            echo "<div class='alert alert-danger'>Error unenrolling from module: " . $stmt_delete->error . "</div>";
+        }
+        $stmt_delete->close();
+    } else {
+        echo "<div class='alert alert-warning'>You are not enrolled in this module.</div>";
+    }
+
+    $stmt_check->close();
+}
+
 // Handle form submission for updating the grade
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['grade'], $_POST['module'], $_POST['component'])) {
     // Get user input from form
@@ -114,6 +143,34 @@ include "inc/head.inc.php";
                     ?>
                 </select>
                 <button type="submit" class="btn btn-primary">Enroll</button>
+            </div>
+        </form>
+
+        <!-- Delete Module Section -->
+        <form method="post" action="">
+            <div class="form-group">
+                <label for="delete_module">Unenroll from a Module:</label>
+                <select id="delete_module" name="delete_module" class="form-control mb-3" required>
+                    <option value="" disabled selected>Select a module</option>
+                    <?php
+                    // Fetch modules that the student is enrolled in
+                    $sql = "SELECT sm.student_module_id, m.module_name 
+                            FROM student_modules sm
+                            JOIN modules m ON sm.module_id = m.module_id
+                            WHERE sm.student_id = ?";
+                    $stmt = $conn->prepare($sql);
+                    $stmt->bind_param("i", $student_id);
+                    $stmt->execute();
+                    $result = $stmt->get_result();
+
+                    while ($row = $result->fetch_assoc()) {
+                        echo "<option value='{$row['student_module_id']}'>{$row['module_name']}</option>";
+                    }
+
+                    $stmt->close();
+                    ?>
+                </select>
+                <button type="submit" class="btn btn-danger">Unenroll</button>
             </div>
         </form>
 
